@@ -1,4 +1,4 @@
-import { Pelunasan } from 'src/pinjam/pelunasan/entities/pelunasan.entity';
+import {Perubahan } from 'src/pinjam/perubahan/entities/perubahan.entity';
 import { Permohonan } from 'src/pinjam/permohonan/entities/permohonan.entity';
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, CreateDateColumn, OneToOne, JoinColumn } from 'typeorm';
 
@@ -29,6 +29,6 @@ export class Pinjaman {
     @JoinColumn({name: 'idPermohonan'})
     permohonan: Permohonan;
 
-    @OneToOne(() => Pelunasan, (pelunasan) => pelunasan.pinjaman )
-    pelunasan: Pelunasan;
+    @OneToMany(() => Perubahan, (perubahan) => perubahan.pinjaman)
+    perubahan: Perubahan[];
 }

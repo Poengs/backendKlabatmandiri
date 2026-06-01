@@ -26,11 +26,11 @@ export class TransaksiWaserda {
     @Column()
     idToko: number;
 
-    @ManyToOne(() => Karyawan, (karyawan) => karyawan.transaksiWaserda)
+    @ManyToOne(() => Karyawan, (karyawan) => karyawan.transaksiWaserda, { eager: true })
     @JoinColumn({name: 'idKaryawan'})
     karyawan: Karyawan;
 
-    @ManyToOne (() => Toko, (toko) => toko.transaksiWaserda)
+    @ManyToOne (() => Toko, (toko) => toko.transaksiWaserda, { eager: true })
     @JoinColumn({name: 'idToko'})
     toko: Toko;
 

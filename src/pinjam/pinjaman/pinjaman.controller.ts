@@ -7,11 +7,6 @@ import { UpdatePinjamanDto } from './dto/update-pinjaman.dto';
 export class PinjamanController {
   constructor(private readonly pinjamanService: PinjamanService) {}
 
-  @Post()
-  create(@Body() createPinjamanDto: CreatePinjamanDto) {
-    return this.pinjamanService.create(createPinjamanDto);
-  }
-
   @Get()
   findAll() {
     return this.pinjamanService.findAll();

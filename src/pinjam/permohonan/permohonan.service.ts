@@ -1,9 +1,9 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePermohonanDto } from './dto/create-permohonan.dto';
 import { updatePermohonanByKaryawanDto, UpdatePermohonanDto } from './dto/update-permohonan.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Permohonan } from './entities/permohonan.entity';
-import { Repository } from 'typeorm';
+import { DataSource ,Repository } from 'typeorm';
 import { PinjamanService } from '../pinjaman/pinjaman.service';
 
 @Injectable()
@@ -11,7 +11,8 @@ export class PermohonanService {
   constructor(
     @InjectRepository(Permohonan)
     private readonly permohonanRepo: Repository<Permohonan>,
-    private readonly pinjamanService: PinjamanService
+    private readonly pinjamanService: PinjamanService,
+    private readonly dataSource: DataSource
   ) {}
 
   async create(createPermohonanDto: CreatePermohonanDto): Promise<Permohonan> {
@@ -63,49 +64,65 @@ export class PermohonanService {
 
   //buat fungsi untuk upload bukti penerimaan sekaligus membuat tabel pinjaman
   async uploadBuktiPenerimaan(id: number, idPemberi: string, buktiPenerimaan: string): Promise<Permohonan> {
-    // cek apakah id permohonan dan cek apakah sudah diupload bukti penerimaan atau belum
-    let permohonan = await this.permohonanRepo.findOne({
-      where: {idPermohonan: id}
-    });
-    if (!permohonan) {
-      throw new NotFoundException(`Data Permohonan dengan ID: ${id} tidak Ditemukan`);
-    } 
-    else if (permohonan.buktiPenerimaan) { 
-      throw new ConflictException(`Data Permohonan dengan ID: ${id} sudah diupload bukti penerimaan dan tidak bisa diubah`);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const manager = queryRunner.manager;
+      
+      // cek apakah id permohonan dan cek apakah sudah diupload bukti penerimaan atau belum
+      let permohonan = await manager.findOne(Permohonan,{
+        where: {idPermohonan: id}
+      });
+      if (!permohonan) {
+        throw new NotFoundException(`Data Permohonan dengan ID: ${id} tidak Ditemukan`);
+      } 
+      else if (permohonan.buktiPenerimaan) { 
+        throw new ConflictException(`Data Permohonan dengan ID: ${id} sudah diupload bukti penerimaan dan tidak bisa diubah`);
+      }
+
+      // isi tabel permohonan
+      permohonan.buktiPenerimaan = buktiPenerimaan;
+      permohonan.idPemberi = idPemberi;
+  
+      // buat tabel pinjaman dengan bunga 1% menurun
+      const bunga = Math.round(0.01 * permohonan.jumlahPinjaman);
+      const tagihan = Math.round(permohonan.jumlahPinjaman/permohonan.tenor) + bunga;
+      await this.pinjamanService.createWithManager(manager, {
+        sisaPokok: permohonan.jumlahPinjaman,
+        bungaBerlaku: bunga,
+        tagihan: tagihan,
+        status: 'berjalan',
+        idPermohonan: permohonan.idPermohonan,
+      });
+
+      await manager.update(Permohonan, id, {
+        buktiPenerimaan,
+        idPemberi,
+        status: 'Pinjaman Berlangsung',
+      });
+      await queryRunner.commitTransaction();
+      return await this.permohonanRepo.findOne({
+        where: { idPermohonan: id },
+      });
     }
-
-    // isi tabel permohonan
-    permohonan.buktiPenerimaan = buktiPenerimaan;
-    permohonan.idPemberi = idPemberi;
-    permohonan.status = 'Permohonan telah dicairkan';
-
-    // buat tabel pinjaman dengan bunga 1% menurun
-    const bunga = Math.round(0.01 * permohonan.jumlahPinjaman);
-    const tagihan = Math.round(permohonan.jumlahPinjaman/permohonan.tenor) + bunga;
-    await this.pinjamanService.create({
-      sisaPokok: permohonan.jumlahPinjaman,
-      bungaBerlaku: bunga,
-      tagihan: tagihan,
-      status: 'berjalan',
-      idPermohonan: permohonan.idPermohonan,
-    });
-
-    await this.permohonanRepo.update(id, {
-      buktiPenerimaan,
-      idPemberi,
-      status: 'Pinjaman Berlangsung',
-    });
-
-    return await this.permohonanRepo.findOne({
-      where: { idPermohonan: id },
-    });
+    catch (error) {
+      await queryRunner.rollbackTransaction();
+      console.error('Error saat upload bukti penerimaan:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+    }
+    finally {
+      await queryRunner.release();
+    }
   }
 
   // mengambil semua data permohonan dengan urutan berdasarkan status persetujuan (yang belum disetujui muncul duluan)
   async findAll(): Promise<Permohonan[]> {
     return await this.permohonanRepo
     .createQueryBuilder('permohonan')
-    .orderBy('permohonan.persetujuan', 'ASC', 'NULLS FIRST') 
+    .orderBy('permohonan.persetujuan', 'ASC') 
     .getMany();
   }
 

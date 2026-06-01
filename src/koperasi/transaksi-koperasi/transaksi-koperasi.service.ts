@@ -36,7 +36,7 @@ export class TransaksiKoperasiService {
     if (kategori) {
       query.where('transaksi.kategori = :kategori', { kategori });
     }
-    query.orderBy('transaksi.tanggal', 'DESC'); //urutkan
+    query.orderBy('transaksi.tanggalTransaksi', 'DESC'); //urutkan
 
     return await query.getMany();
   }

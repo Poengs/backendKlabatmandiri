@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePinjamanDto } from './dto/create-pinjaman.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Pinjaman } from './entities/pinjaman.entity';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 
 @Injectable()
 export class PinjamanService {
@@ -11,16 +11,14 @@ export class PinjamanService {
     private readonly pinjamanRepo: Repository<Pinjaman>
   ) {}
 
-  async create(createPinjamanDto: CreatePinjamanDto) {
-    const existingPinjaman = await this.pinjamanRepo.findOne({
-      where: { idPermohonan: createPinjamanDto.idPermohonan },
+  async createWithManager(manager: EntityManager, createPinjamanDto: CreatePinjamanDto): Promise<Pinjaman> {
+    const cekPinjamanExist = await manager.findOne(Pinjaman, {
+      where: { idPermohonan: createPinjamanDto.idPermohonan }
     });
-
-    if (existingPinjaman) {
-      return existingPinjaman;
+    if (cekPinjamanExist) {
+      throw new BadRequestException(`Data Pinjaman dari Permohonan dengan ID: ${createPinjamanDto.idPermohonan} sudah ada`);
     }
-
-    return await this.pinjamanRepo.save(createPinjamanDto);
+    return await manager.save(Pinjaman, createPinjamanDto);
   }
 
   async findAll(): Promise<Pinjaman[]> {

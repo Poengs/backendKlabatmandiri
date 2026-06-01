@@ -37,7 +37,7 @@ export class TransaksiKoperasi {
     @OneToMany(() => TambahStok, (tambahstok) => tambahstok.transaksiKoperasi)
     tambahStok: TambahStok[];
 
-    @ManyToOne(() => Karyawan, (karyawan) => karyawan.transaksiKoperasi)
+    @ManyToOne(() => Karyawan, (karyawan) => karyawan.transaksiKoperasi, { eager: true })
     @JoinColumn({ name: 'idKaryawan' })
     karyawan: Karyawan;
 }

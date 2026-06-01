@@ -25,11 +25,11 @@ export class Stok {
     @Column()
     idToko: number; 
 
-    @ManyToOne(() => Produk, (produk) => produk.stok)
+    @ManyToOne(() => Produk, (produk) => produk.stok, { eager: true })
     @JoinColumn({name: 'idProduk'})
     produk: Produk;
 
-    @ManyToOne(() => Toko, (toko) => toko.stok)
+    @ManyToOne(() => Toko, (toko) => toko.stok, { eager: true })
     @JoinColumn({ name: 'idToko' })
     toko: Toko;
 

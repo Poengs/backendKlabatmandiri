@@ -31,11 +31,11 @@ export class HapusStok {
     @Column() 
     idKaryawan: string;
 
-    @ManyToOne(() => Stok, (stok) => stok.hapusStok)
+    @ManyToOne(() => Stok, (stok) => stok.hapusStok, { eager: true })
     @JoinColumn({ name: 'idStok' })
     stok: Stok;
 
-    @ManyToOne(() => Karyawan, (karyawan) => karyawan.hapusStok)
+    @ManyToOne(() => Karyawan, (karyawan) => karyawan.hapusStok, { eager: true })
     @JoinColumn({ name: 'idKaryawan'})
     karyawan: Karyawan;
 }

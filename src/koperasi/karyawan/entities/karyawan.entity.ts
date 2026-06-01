@@ -6,6 +6,7 @@ import { TambahStok } from 'src/inventaris/tambah-stok/entities/tambah-stok.enti
 import { TransaksiKoperasi } from 'src/koperasi/transaksi-koperasi/entities/transaksi-koperasi.entity';
 import { Permohonan } from 'src/pinjam/permohonan/entities/permohonan.entity';
 import { Auth } from 'src/auth/entities/auth.entity';
+import { Perubahan } from 'src/pinjam/perubahan/entities/perubahan.entity';
 
 @Entity()
 export class Karyawan {
@@ -58,10 +59,10 @@ export class Karyawan {
     @Column()
     role: string;
 
-    @Column()
+    @Column({nullable: true})
     idToko: number;
 
-    @ManyToOne(() => Toko, (toko) => toko.karyawan, {nullable: true})
+    @ManyToOne(() => Toko, (toko) => toko.karyawan, {nullable: true, eager: true})
     @JoinColumn({name: 'idToko'})
     toko: Toko;
 
@@ -88,7 +89,14 @@ export class Karyawan {
     @OneToMany(() => Permohonan, (permohonan) => permohonan.pemberi)
     daftarPemberian: Permohonan[];
 
+    @OneToMany(() => Perubahan, (perubahan) => perubahan.penyetuju)
+    daftarPenyetujuPerubahanPinjaman: Perubahan[];
+
+    @OneToMany(() => Perubahan, (perubahan) => perubahan.pengupload)
+    daftarPenguploadPerubahanPinjaman: Perubahan[];    
+
     // login
     @OneToMany(() => Auth, (auth) => auth.karyawan)
     auth: Auth[];
+
 }

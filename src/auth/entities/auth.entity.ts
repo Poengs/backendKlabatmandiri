@@ -27,7 +27,7 @@ export class Auth {
     @Column()
     idKaryawan: string;
 
-    @ManyToOne(() => Karyawan, (karyawan) => karyawan.auth)
+    @ManyToOne(() => Karyawan, (karyawan) => karyawan.auth, { eager: true })
     @JoinColumn({ name: 'idKaryawan' })
     karyawan: Karyawan;
 }

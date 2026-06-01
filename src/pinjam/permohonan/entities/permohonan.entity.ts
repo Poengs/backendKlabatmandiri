@@ -49,18 +49,18 @@ export class Permohonan {
     @Column({ nullable: true })
     idPenyetuju: string;
         
-    @Column({ nullable: true })
+    @Column({ nullable: true }) 
     idPemberi: string;
 
-    @ManyToOne(() => Karyawan, (peminjam)=> peminjam.daftarPemohon)
+    @ManyToOne(() => Karyawan, (peminjam)=> peminjam.daftarPemohon, { eager: true })
     @JoinColumn({name: 'idPemohon'})
     pemohon: Karyawan;
 
-    @ManyToOne(() => Karyawan, (peminjam)=> peminjam.daftarPersetujuan)
+    @ManyToOne(() => Karyawan, (peminjam)=> peminjam.daftarPersetujuan, { eager: true })
     @JoinColumn({ name: 'idPenyetuju' })
     penyetuju: Karyawan;
 
-    @ManyToOne(() => Karyawan, (peminjam)=> peminjam.daftarPemberian)
+    @ManyToOne(() => Karyawan, (peminjam)=> peminjam.daftarPemberian, { eager: true })
     @JoinColumn({ name: 'idPemberi' })
     pemberi: Karyawan;
 

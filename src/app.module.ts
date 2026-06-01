@@ -15,7 +15,8 @@ import { TambahStokModule } from './inventaris/tambah-stok/tambah-stok.module';
 import { AuthModule } from './auth/auth.module';
 import { PermohonanModule } from './pinjam/permohonan/permohonan.module';
 import { PinjamanModule } from './pinjam/pinjaman/pinjaman.module';
-import { PelunasanModule } from './pinjam/pelunasan/pelunasan.module';
+import { PelunasanModule } from './pinjam/perubahan/perubahan.module';
+import { PerubahanModule } from './pinjam/perubahan/perubahan.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { PelunasanModule } from './pinjam/pelunasan/pelunasan.module';
     PermohonanModule,
     PinjamanModule,
     PelunasanModule,
+    PerubahanModule,
   ],
   controllers: [AppController],
   providers: [AppService],

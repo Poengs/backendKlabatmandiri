@@ -23,11 +23,11 @@ export class DetailTransaksiWaserda {
     @Column()
     idTransaksiWaserda: number;
 
-    @ManyToOne(() => Stok, (stok) => stok.detailTransaksiWaserda)
+    @ManyToOne(() => Stok, (stok) => stok.detailTransaksiWaserda, { eager: true })
     @JoinColumn({name: 'idStok'})
     stok: Stok;
 
-    @ManyToOne(() => TransaksiWaserda, (tw)=> tw.detailTransaksiWaserda)
+    @ManyToOne(() => TransaksiWaserda, (tw)=> tw.detailTransaksiWaserda, { eager: true })
     @JoinColumn({name: 'idTransaksiWaserda' })
     transaksiWaserda: TransaksiWaserda;
 }

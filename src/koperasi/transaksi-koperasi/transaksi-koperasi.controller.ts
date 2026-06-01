@@ -34,7 +34,7 @@ export class TransaksiKoperasiController {
   @Get(':id/detail-stok')
   async getDetailTambahStok(@Param('id', ParseIntPipe) id: number){
     return await this.transaksiKoperasiService.findDetailTambahStok(id);
-  }
+  } 
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: string) {

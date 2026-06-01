@@ -27,15 +27,15 @@ export class TambahStok {
     @Column()
     idKaryawan: string;
 
-    @ManyToOne(() => TransaksiKoperasi, (transkop) => transkop.tambahStok)
+    @ManyToOne(() => TransaksiKoperasi, (transkop) => transkop.tambahStok, { eager: true })
     @JoinColumn({name: 'idTransaksiKoperasi'})
     transaksiKoperasi: TransaksiKoperasi;
 
-    @ManyToOne(() => Stok, (stok) => stok.tambahStok)
+    @ManyToOne(() => Stok, (stok) => stok.tambahStok, { eager: true })
     @JoinColumn({ name: 'idStok' })
     stok: Stok;
 
-    @ManyToOne (() => Karyawan, (karyawan) => karyawan.tambahStok)
+    @ManyToOne (() => Karyawan, (karyawan) => karyawan.tambahStok, { eager: true })
     @JoinColumn({name: 'idKaryawan'})
     karyawan: Karyawan;
 }
