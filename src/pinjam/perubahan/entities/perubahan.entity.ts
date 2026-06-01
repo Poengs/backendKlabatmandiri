@@ -39,6 +39,9 @@ export class Perubahan {
     @Column()
     idPengupload: string;
 
+    @Column()
+    idpenyetuju: string;
+
     @Column({ type: 'json'})
     dataPengajuan: Record<string, any>;
 

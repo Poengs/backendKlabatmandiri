@@ -36,8 +36,8 @@ export class PinjamanService {
   }
 
   //update khusus untuk update sisa pokok dan tagihan setelah pelunasan
-  async update(id: number, jumlah: number): Promise<Pinjaman> {
-    const pinjaman = await this.pinjamanRepo.findOne({
+  async bayarcepatWithManager(manager: EntityManager, id: number, jumlah: number): Promise<Pinjaman> {
+    const pinjaman = await manager.findOne(Pinjaman, {
       where: {idPinjaman: id}
     });
     if (!pinjaman) { 
@@ -46,7 +46,21 @@ export class PinjamanService {
     pinjaman.sisaPokok -= jumlah;
     pinjaman.bungaBerlaku = Math.round(0.01 * pinjaman.sisaPokok);
     pinjaman.tagihan = pinjaman.sisaPokok + pinjaman.bungaBerlaku;
-    return await this.pinjamanRepo.save(pinjaman);
+    return await manager.save(pinjaman);
   }
 
+  async updateTenorWithManager(manager: EntityManager, id: number, perubahanTenor: number): Promise<any> {
+    const pinjaman = await manager.findOne(Pinjaman, {
+      where: {idPinjaman: id}
+    });
+    if (!pinjaman) {
+      throw new NotFoundException(`Data Pinjaman dengan ID: ${id} tidak Ditemukan`);
+    }
+    if (perubahanTenor <= 0) {
+      throw new BadRequestException('Tenor baru tidak boleh nol atau minus.');
+    }
+    pinjaman.sisaTenor = perubahanTenor;
+    pinjaman.tagihan = Math.round(pinjaman.sisaPokok / perubahanTenor + pinjaman.bungaBerlaku);
+    return await manager.save(pinjaman);
+  }
 }
