@@ -7,10 +7,10 @@ import { UpdatePerubahanDto } from './dto/update-perubahan.dto';
 export class PerubahanController {
   constructor(private readonly perubahanService: PerubahanService) {}
 
-  @Post()
-  create(@Body() createPerubahanDto: CreatePerubahanDto) {
-    return this.perubahanService.create(createPerubahanDto);
-  }
+  // @Post()
+  // // create(@Body() createPerubahanDto: CreatePerubahanDto) {
+  // //   return this.perubahanService.create(createPerubahanDto);
+  // // }
 
   @Get()
   findAll() {

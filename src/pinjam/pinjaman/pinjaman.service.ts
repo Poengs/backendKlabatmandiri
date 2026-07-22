@@ -45,7 +45,7 @@ export class PinjamanService {
     }
     pinjaman.sisaPokok -= jumlah;
     pinjaman.bungaBerlaku = Math.round(0.01 * pinjaman.sisaPokok);
-    pinjaman.tagihan = pinjaman.sisaPokok + pinjaman.bungaBerlaku;
+    pinjaman.tagihanBulanIni = pinjaman.sisaPokok + pinjaman.bungaBerlaku;
     return await manager.save(pinjaman);
   }
 
@@ -60,7 +60,7 @@ export class PinjamanService {
       throw new BadRequestException('Tenor baru tidak boleh nol atau minus.');
     }
     pinjaman.sisaTenor = perubahanTenor;
-    pinjaman.tagihan = Math.round(pinjaman.sisaPokok / perubahanTenor + pinjaman.bungaBerlaku);
+    pinjaman.tagihanBulanIni = Math.round(pinjaman.sisaPokok / perubahanTenor + pinjaman.bungaBerlaku);
     return await manager.save(pinjaman);
   }
 }

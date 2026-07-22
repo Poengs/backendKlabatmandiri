@@ -26,10 +26,14 @@ export class PerubahanService {
       dataPengajuan: createPerubahanDto.dataPengajuan,
       dataSebelumnya: cekPinjaman
     })
+    if (createPerubahanDto.jenisAksi === 'pelunasan') {
+      perubahan.dataPengajuan.potongSisaPokok = cekPinjaman.sisaPokok;
+      // untuk jenis aksi pebayaran parsial, dari frontend mengirimkan jumlah pembayaran yang diusulkan dengan nama field potongSisaPokok.
+    }
     return await this.perubahanRepo.save(perubahan); 
   }
 
-  async persetujuanLunas(id: number, idPenyetuju: string, persetujuan: boolean) {
+  async persetujuan(id: number, idPenyetuju: string, persetujuan: boolean) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -38,15 +42,20 @@ export class PerubahanService {
       const perubahan = await manager.findOne(Perubahan, { 
         where: { idPerubahan: id } 
       });
+      // cek apakah perubahan ada
       if (!perubahan) {
       throw new NotFoundException(`Data perubahan dengan ID: ${id} tidak Ditemukan`);
       }
+    
       perubahan.persetujuan = persetujuan;
       perubahan.tanggalKeputusan = new Date();
-      perubahan.idpenyetuju = idPenyetuju;
+      perubahan.idPenyetuju = idPenyetuju;
+      //khusus untuk pembayaran lunas atau parsial, statusnya saja yang berubah
       if (persetujuan==true && (perubahan.jenisAksi === 'pelunasan' || perubahan.jenisAksi === 'pembayaran_parsial')) {
         perubahan.status = 'disetujui menunggu pembayaran dan upload bukti';
-      } else if (persetujuan== true && (perubahan.jenisAksi === 'penambahan_tenor' || perubahan.jenisAksi === 'pengurangan_tenor')) {
+      } 
+      //khusus untuk perubahan tenor, langsung update pinjaman
+      else if (persetujuan== true && (perubahan.jenisAksi === 'penambahan_tenor' || perubahan.jenisAksi === 'pengurangan_tenor')) {
         await this.pinjamanService.updateTenorWithManager(manager, perubahan.idPinjaman, perubahan.dataPengajuan.perubahanTenor);
         perubahan.status = 'disetujui';
       }
@@ -63,6 +72,34 @@ export class PerubahanService {
   }
 
   //Task tambahkan fungsi untuk upload file dan nantinya akan update pinjaman khusus untuk pelunasan
+  async uploadBukti(id: number, bukti: string, idPengupload: string) {
+    const querryRunner = this.dataSource.createQueryRunner();
+    await querryRunner.connect();
+    await querryRunner.startTransaction();
+    try {
+      const manager = querryRunner.manager;
+      const perubahan = await manager.findOne(Perubahan, {
+        where: { idPerubahan: id }
+      });
+      if (!perubahan) {
+        throw new NotFoundException(`Data perubahan dengan ID: ${id} tidak Ditemukan`);
+      }
+      perubahan.bukti = bukti;
+      perubahan.idPengupload = idPengupload;
+      if (perubahan.jenisAksi === 'pelunasan' || perubahan.jenisAksi === 'pembayaran_parsial') {
+        await this.pinjamanService.bayarcepatWithManager(manager, perubahan.idPinjaman, perubahan.dataPengajuan.potongSisaPokok);
+        perubahan.status = 'pelunasan berhasil';
+        // pikirkan jika bunga juga dipotong kalau pembayaran parsial.
+      }
+      await manager.save(perubahan);
+      return perubahan;
+    } catch (error) {
+      await querryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await querryRunner.release();
+    }
+  }
 
   async findAll() {
     return await this.perubahanRepo.find();

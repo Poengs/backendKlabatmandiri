@@ -1,6 +1,6 @@
 import {Perubahan } from 'src/pinjam/perubahan/entities/perubahan.entity';
 import { Permohonan } from 'src/pinjam/permohonan/entities/permohonan.entity';
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, CreateDateColumn, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, CreateDateColumn, OneToOne, JoinColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class Pinjaman {
@@ -10,18 +10,24 @@ export class Pinjaman {
     @Column({ type: 'numeric', precision: 15, scale: 0 })
     sisaPokok: number;
 
+    @Column()
+    sisaTenor: number;
+
     @Column({ type: 'numeric', precision: 15, scale: 0 })
     bungaBerlaku: number; //bentuknya persen
 
     @Column({ type: 'numeric', precision: 15, scale: 0 })
-    tagihan: number;
-
-    @Column()
-    sisaTenor: number;
+    tagihanBulanIni: number;
 
     @Column()
     status: string;
+
+    @CreateDateColumn()
+    tanggalBuat: string;
     
+    @UpdateDateColumn()
+    tanggalUbah: string;
+
     @Column()
     idPermohonan: number;
 

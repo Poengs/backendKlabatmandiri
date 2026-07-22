@@ -1,8 +1,9 @@
-import { Column, CreateDateColumn, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { TenorOption } from "../jenisAksi.enum";
 import { Pinjaman } from "src/pinjam/pinjaman/entities/pinjaman.entity";
 import { Karyawan } from "src/koperasi/karyawan/entities/karyawan.entity";
 
+@Entity()
 export class Perubahan {
     @PrimaryGeneratedColumn()
     idPerubahan: number;
@@ -40,7 +41,7 @@ export class Perubahan {
     idPengupload: string;
 
     @Column()
-    idpenyetuju: string;
+    idPenyetuju: string;
 
     @Column({ type: 'json'})
     dataPengajuan: Record<string, any>;

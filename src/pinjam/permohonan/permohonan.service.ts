@@ -1,5 +1,5 @@
-import { ConflictException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreatePermohonanDto } from './dto/create-permohonan.dto';
+import { ConflictException, HttpException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { CreatePermohonanDto, CreatePinjamanPermohonanDto } from './dto/create-permohonan.dto';
 import { updatePermohonanByKaryawanDto, UpdatePermohonanDto } from './dto/update-permohonan.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Permohonan } from './entities/permohonan.entity';
@@ -91,7 +91,7 @@ export class PermohonanService {
       await this.pinjamanService.createWithManager(manager, {
         sisaPokok: permohonan.jumlahPinjaman,
         bungaBerlaku: bunga,
-        tagihan: tagihan,
+        tagihanBulanIni: tagihan,
         status: 'berjalan',
         idPermohonan: permohonan.idPermohonan,
       });
@@ -112,6 +112,9 @@ export class PermohonanService {
       if (error instanceof HttpException) {
         throw error;
       }
+      throw new InternalServerErrorException(
+        error.massage || 'Gagal memproses bukti penerimaan & pembuatan pinjaman',
+      );
     }
     finally {
       await queryRunner.release();
@@ -154,4 +157,61 @@ export class PermohonanService {
     }
     await this.permohonanRepo.remove(permohonan);
   }
+
+  // khusus untuk maintenance atau darurat
+
+
+  // fungsi untuk mengisi data permohonan, pinjaman dalam 1 form
+
+  async managerCreatePeromohonandanPinjaman(createPinjamanPermohonanDto: CreatePinjamanPermohonanDto): Promise<any> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const manager = queryRunner.manager;
+      // buat data permohonan
+      const permohonan = await manager.save(Permohonan, {
+        idPemohon: createPinjamanPermohonanDto.idPemohon,
+        idPenyetuju: createPinjamanPermohonanDto.idPenyetuju,
+        jumlahPinjaman: createPinjamanPermohonanDto.jumlahPinjaman,
+        nomorSurat: createPinjamanPermohonanDto.NomorSurat,
+        tenor: createPinjamanPermohonanDto.tenor,
+        keperluan: createPinjamanPermohonanDto.keperluan,
+        tanggalPengajuan: createPinjamanPermohonanDto.tanggalPengajuan,
+        persetujuan: true,
+        tanggalKeputusan: createPinjamanPermohonanDto.tanggalKeputusan,
+        buktiPenerimaan: createPinjamanPermohonanDto.buktiPenerimaan,
+        status: 'berjalan',
+        saksi: createPinjamanPermohonanDto.saksi,
+        kepalaBagian: createPinjamanPermohonanDto.kepalaBagian,
+        idPemberi: createPinjamanPermohonanDto.idPemberi,
+        tanggalPenerimaan: createPinjamanPermohonanDto.tanggalPenerimaan,
+      });
+      // buat data pinjaman
+      const bunga = Math.round(0.01 * createPinjamanPermohonanDto.sisaPokok);
+      const tagihan = Math.round(createPinjamanPermohonanDto.sisaPokok/createPinjamanPermohonanDto.sisaTenor) + bunga;
+      await this.pinjamanService.createWithManager(manager, {
+        sisaPokok: createPinjamanPermohonanDto.sisaPokok,
+        bungaBerlaku: bunga,
+        tagihanBulanIni: tagihan,
+        status: 'berjalan',
+        idPermohonan: permohonan.idPermohonan,
+      });
+      await queryRunner.commitTransaction();
+      return await this.permohonanRepo.findOne({
+        where: { idPermohonan: permohonan.idPermohonan },
+      });
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      console.error('Error saat membuat permohonan dan pinjaman:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        error.message || 'Gagal membuat permohonan dan pinjaman',
+      );
+    } finally {
+      await queryRunner.release();
+    }
+  };
 }

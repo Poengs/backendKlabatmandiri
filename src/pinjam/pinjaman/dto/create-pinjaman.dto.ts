@@ -13,7 +13,7 @@ export class CreatePinjamanDto {
     @IsNumber()
     @IsNotEmpty()
     @IsPositive()
-    tagihan: number;
+    tagihanBulanIni: number;
 
     @IsString()
     @IsNotEmpty()
