@@ -16,10 +16,12 @@ export class PermohonanService {
   ) {}
 
   async create(createPermohonanDto: CreatePermohonanDto): Promise<Permohonan> {
-     const permohonan =await this.permohonanRepo.save(createPermohonanDto);
-     permohonan.status = 'menunggu persetujuan';
-     permohonan.tanggalPengajuan = new Date();
-     permohonan.nomorSurat = `Pinjaman-${permohonan.idPermohonan.toString().padStart(5, '0')}`;
+     const permohonan = await this.permohonanRepo.save({
+    ...createPermohonanDto,
+    status: 'menunggu persetujuan',
+    tanggalPengajuan: new Date(),
+    });
+    permohonan.nomorSurat = `Pinjaman-${permohonan.idPermohonan.toString().padStart(5, '0')}`;
      return await this.permohonanRepo.save(permohonan);
   }
 
@@ -80,10 +82,6 @@ export class PermohonanService {
       else if (permohonan.buktiPenerimaan) { 
         throw new ConflictException(`Data Permohonan dengan ID: ${id} sudah diupload bukti penerimaan dan tidak bisa diubah`);
       }
-
-      // isi tabel permohonan
-      permohonan.buktiPenerimaan = buktiPenerimaan;
-      permohonan.idPemberi = idPemberi;
   
       // buat tabel pinjaman dengan bunga 1% menurun
       const bunga = Math.round(0.01 * permohonan.jumlahPinjaman);
@@ -96,6 +94,7 @@ export class PermohonanService {
         idPermohonan: permohonan.idPermohonan,
       });
 
+      //tabel Permohonan 
       await manager.update(Permohonan, id, {
         buktiPenerimaan,
         idPemberi,
@@ -113,7 +112,7 @@ export class PermohonanService {
         throw error;
       }
       throw new InternalServerErrorException(
-        error.massage || 'Gagal memproses bukti penerimaan & pembuatan pinjaman',
+        error.message || 'Gagal memproses bukti penerimaan & pembuatan pinjaman',
       );
     }
     finally {
